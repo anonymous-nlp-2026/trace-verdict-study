@@ -4,7 +4,9 @@ Code and data for "Trace Verbosity Degrades SFT Verdict Prediction: A Case Study
 
 ## Overview
 
-This project investigates how different representations of execution traces affect the accuracy of SFT-based language models in predicting code correctness (pass/fail). We systematically ablate trace components across four code-specialized models (1.5B–13B parameters, three architecture families) and find that compact exception events achieve ≥99.33% accuracy while complete traces plateau near the source-code-only baseline (77–82%).
+A natural assumption when augmenting code models with execution traces is that richer runtime information yields better predictions. We challenge this for verdict prediction (classifying whether a test passes or fails) and find the opposite: complete traces degrade accuracy to near-baseline levels, while compact exception events alone reach ≥99.33% across all four models tested (1.5B–13B parameters, three architecture families).
+
+Through the first systematic component ablation of trace representations across multiple code models, we identify **information density** as the key factor: exception events encode the fault signal in roughly 150 tokens, whereas full traces dilute it across thousands of routine steps, trapping models in unstable oscillation. Controlled experiments support this finding: **gradient masking** isolates backward-pass dilution as a minor factor (~4%), a **tail-truncation sweep** reveals a sharp phase transition at the diagnostic-event boundary, and **format-marker removal** confirms the signal is semantic rather than syntactic. Cross-dataset evaluation (HumanEval ↔ MBPP) shows the effect generalizes across benchmarks.
 
 ## Requirements
 
@@ -76,6 +78,8 @@ Place prepared JSONL data files in `./data/`. Each file follows the format:
 | `no_trace` | Source code + test only (no trace information) |
 | `nomarker` | Exception-only with format markers removed |
 | `full_trace_label_only` | Full trace input with loss computed on label tokens only |
+| `full_trace_tailN` | Last N tokens of complete trace (tail-truncation sweep: 256/384/512/1024/2048) |
+| `full_trace_headN` | First N tokens of complete trace (head-truncation) |
 
 ## Models
 
